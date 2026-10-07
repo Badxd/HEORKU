@@ -1,6 +1,6 @@
 from pyrogram import filters
 
-from DVIS import app
+from BAD import app
 
 
 @app.on_message(filters.command(["help"]))

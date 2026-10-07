@@ -7,7 +7,7 @@ from pyrogram import filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyromod.exceptions import ListenerTimeout
 
-from DVIS import app
+from BAD import app
 from config import OWNER_ID as SUDOERS
 
 # Import your MongoDB database structure
@@ -39,7 +39,7 @@ async def post(url: str, *args, **kwargs):
         return data
 
 
-async def DVISbin(text):
+async def BADbin(text):
     resp = await post(f"{BASE}api/v2/paste", data=text)
     if not resp["success"]:
         return
@@ -80,7 +80,7 @@ async def is_heroku():
 
 
 async def paste_neko(code: str):
-    return await DVISbin(code)
+    return await BADbin(code)
 
 
 def fetch_app_json(repo_url):
@@ -585,7 +585,7 @@ async def get_app_logs(client, callback_query):
         logs_url = result.get("logplex_url")
         logs = requests.get(logs_url).text
 
-        paste_url = await DVISbin(logs)
+        paste_url = await BADbin(logs)
         await callback_query.answer(
             convert_to_small_caps("Getting Logs..."), show_alert=True
         )

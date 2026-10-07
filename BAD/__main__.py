@@ -4,8 +4,8 @@ import importlib
 
 from pyrogram import idle
 
-from DVIS import app
-from DVIS.plugins import ALL_MODULES
+from BAD import app
+from BAD.plugins import ALL_MODULES
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,13 +16,13 @@ logging.basicConfig(
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
 logging.getLogger("pymongo").setLevel(logging.ERROR)
 
-log = logging.getLogger("DVIS-HEROKU-BOT")
+log = logging.getLogger("BAD-HEROKU-BOT")
 
 async def main():
     log.info("Starting bot...")
     await app.start()
     for all_module in ALL_MODULES:
-        imported_module = importlib.import_module("DVIS.plugins" + all_module)
+        imported_module = importlib.import_module("BAD.plugins" + all_module)
     log.info("Bot Started")
     await idle()
     await app.stop()

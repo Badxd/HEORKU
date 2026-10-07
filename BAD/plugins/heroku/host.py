@@ -9,7 +9,7 @@ from pyrogram import filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyromod.exceptions import ListenerTimeout
 
-from DVIS import app
+from BAD import app
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -58,7 +58,7 @@ async def is_heroku():
 
 
 async def paste_neko(code: str):
-    return await DVISbin(code)
+    return await BADbin(code)
 
 
 def fetch_app_json(repo_url, branch_name):

@@ -3,7 +3,7 @@ from pyrogram import Client, filters
 from config import *
 
 app = Client(
-    name="DVIS",
+    name="BAD",
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,

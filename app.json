@@ -1,13 +1,13 @@
 {
-    "name": "DVIS-HEROKU-BOT",
+    "name": "BAD-HEROKU-BOT",
     "description": "THIS IS HEROKU CONTROLER BOT. IT CONTROLS YOUR ALL HEROKU FUNCTION WITH THE HELP OF HEROKU API KEY. MAKE SURE YOU WILL FILL HEROKU API KEY VALUE CORRECTLY. YOU CAN USE ANY HEROKU API KEY THAT HEROKU ACCOUNT YOU WANT TO ACCESS AND HANDLE.",
     "logo": "https://envs.sh/WkW.jpg",
     "keywords": [
     "python3",
     "telegram",
     "bot",
-    "DVIS",
-    "DVISHEROKUBot",
+    "BAD",
+    "BADHEROKUBot",
     "telegram-bot",
     "pyrogram"
     ],
