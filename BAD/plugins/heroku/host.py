@@ -168,19 +168,19 @@ async def ask_repo_choice(message):
     buttons = [
         [
             InlineKeyboardButton(
-                convert_to_small_caps("ERA VIBES REPO"), callback_data="deploy_upstream"
+                convert_to_small_caps("sʜɪᴢᴜ ᴍᴜsɪᴄ"), callback_data="deploy_upstream"
             ),
         ],
         [
             InlineKeyboardButton(
-                convert_to_small_caps("OTHER REPO"), callback_data="deploy_external"
+                convert_to_small_caps("ᴏᴛʜᴇʀ ʀᴇᴘᴏ"), callback_data="deploy_external"
             ),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
     await message.reply_text(
         convert_to_small_caps(
-            "From which repo do you want to deploy from the **ERA VIBES REPO** or an **Any External Other Repo**?"
+            "From which repo do you want to deploy from the **SHIZU MUSIC** or an **Any External Other Repo**?"
         ),
         reply_markup=reply_markup,
     )
