@@ -195,6 +195,16 @@ async def app_options(client, callback_query):
         ],
         [
             InlineKeyboardButton(
+                convert_to_small_caps("Download Code"),
+                callback_data=f"dl_code:{app_name}",
+            ),
+            InlineKeyboardButton(
+                convert_to_small_caps("Push to GitHub"),
+                callback_data=f"push_code:{app_name}",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
                 convert_to_small_caps("Back"), callback_data="show_apps"
             ),
         ],

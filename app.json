@@ -2,7 +2,13 @@
   "name": "BAD-HEROKU-BOT",
   "description": "Heroku controller bot. Controls your Heroku apps using your Heroku API key.",
   "logo": "https://envs.sh/WkW.jpg",
-  "keywords": ["python3", "telegram", "bot", "pyrogram", "heroku"],
+  "keywords": [
+    "python3",
+    "telegram",
+    "bot",
+    "pyrogram",
+    "heroku"
+  ],
   "stack": "container",
   "env": {
     "API_ID": {
@@ -24,9 +30,16 @@
     "HEROKU_API_KEY": {
       "description": "Your Heroku account's API key",
       "required": true
+    },
+    "GITHUB_TOKEN": {
+      "description": "Optional. GitHub token with write access, only needed for the Push to GitHub button.",
+      "required": false
     }
   },
   "formation": {
-    "worker": { "quantity": 1, "size": "basic" }
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
   }
 }

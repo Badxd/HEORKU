@@ -4,4 +4,4 @@ pyromod
 requests
 tgcrypto
 urllib3
-kurigram
+git+https://github.com/KurimuzonAkuma/pyrogram@dev
