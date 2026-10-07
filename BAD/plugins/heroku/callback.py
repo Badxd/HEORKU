@@ -8,6 +8,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyromod.exceptions import ListenerTimeout
 
 from BAD import app
+from BAD.helpers import batbin as BADbin
 from BAD.plugins.heroku.host import get_deployed_apps
 from config import OWNER_ID as SUDOERS
 
@@ -26,27 +27,6 @@ API_HASH = os.getenv("API_HASH")
 
 
 import re
-
-BASE = "https://batbin.me/"
-
-
-async def post(url: str, *args, **kwargs):
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, *args, **kwargs) as resp:
-            try:
-                data = await resp.json()
-            except Exception:
-                data = await resp.text()
-        return data
-
-
-async def BADbin(text):
-    resp = await post(f"{BASE}api/v2/paste", data=text)
-    if not resp["success"]:
-        return
-    link = BASE + resp["message"]
-    return link
-
 
 
 def convert_to_small_caps(text):
@@ -520,6 +500,11 @@ async def get_app_logs(client, callback_query):
         logs = requests.get(logs_url).text
 
         paste_url = await BADbin(logs)
+        if not paste_url:
+            await callback_query.answer(
+                "Could not upload logs to batbin.me. Try again.", show_alert=True
+            )
+            return
         await callback_query.answer(
             convert_to_small_caps("Getting Logs..."), show_alert=True
         )

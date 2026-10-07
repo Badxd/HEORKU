@@ -1,5 +1,6 @@
 import asyncio
 import os
+import time
 
 import aiohttp
 import requests
@@ -9,6 +10,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyromod.exceptions import ListenerTimeout
 
 from BAD import app
+from BAD.helpers import batbin
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -76,11 +78,22 @@ async def fetch_apps():
     return apps if status == 200 else None
 
 
+def _default_of(var_info):
+    """Default value from app.json (as string) or None when there is none."""
+    value = var_info.get("value")
+    if value is None or str(value) == "":
+        return None
+    return str(value)
+
+
 async def collect_env_variables(message, env_vars):
     user_inputs = {}
+    used_default, not_set = [], []
     await message.reply_text(
         convert_to_small_caps(
-            "Provide the values for the required environment variables. Type /cancel at any time to cancel the deployment."
+            "Provide the values for the environment variables.\n\n"
+            "/skip - use the default value (if no default, the variable is left empty)\n"
+            "/cancel - cancel the deployment"
         )
     )
 
@@ -95,28 +108,60 @@ async def collect_env_variables(message, env_vars):
         ]:
             continue  # Skip hardcoded variables
 
-        # Get description from the JSON file
         description = var_info.get("description", "")
+        default = _default_of(var_info)
+        required = var_info.get("required", True)
+
+        default_line = (
+            f"`{default[:300]}`"
+            if default is not None
+            else "none (variable stays empty if you skip)"
+        )
+        prompt = (
+            f"Provide a value for **{var_name}**\n\n"
+            f"**About:** {description}\n"
+            f"**Default:** {default_line}\n"
+            f"**Required:** {'Yes' if required else 'No'}\n\n"
+            + (
+                "Send the value, or /skip to use the default, or /cancel to stop hosting."
+                if default is not None
+                else "Send the value, or /skip to leave it empty, or /cancel to stop hosting."
+            )
+        )
 
         try:
-            # Ask the user for input with the variable's description
-            response = await app.ask(
-                message.chat.id,
-                f"Provide a value for **{var_name}**\n\n**About:** {description}\n\nType /cancel to stop hosting.",
-                timeout=300,
-            )
-            if response.text == "/skip":
-                continue
-            if response.text == "/cancel":
-                REPO_URL = "https://github.com/Badmunda05/ShizuMusic"
-                await message.reply_text("**Deployment canceled.**")
-                return None
-            user_inputs[var_name] = response.text
+            while True:
+                response = await app.ask(message.chat.id, prompt, timeout=300)
+                text = (response.text or "").strip()
+                if text:
+                    break
+                await message.reply_text("Please send the value as text.")
         except ListenerTimeout:
             await message.reply_text(
                 "Timeout! You must provide the variables within 5 Minutes. Restart the process to deploy."
             )
             return None
+
+        command = text.split("@")[0].lower()
+        if command == "/cancel":
+            await message.reply_text("**Deployment canceled.**")
+            return None
+        if command == "/skip":
+            if default is not None:
+                user_inputs[var_name] = default
+                used_default.append(var_name)
+            else:
+                not_set.append(var_name)
+            continue
+        user_inputs[var_name] = response.text
+
+    summary = []
+    if used_default:
+        summary.append("Default used: " + ", ".join(used_default))
+    if not_set:
+        summary.append("Not set (skipped): " + ", ".join(not_set))
+    if summary:
+        await message.reply_text("\n".join(summary))
 
     # Add hardcoded variables
     user_inputs["HEROKU_APP_NAME"] = app_name
@@ -286,6 +331,138 @@ async def handle_branch_selection(client, callback_query):
     await collect_app_info(callback_query.message)
 
 
+def create_build(app_name, source_url):
+    """Start a build and return (status_code, json). The JSON holds the build id
+    and its live `output_stream_url` (make_heroku_request drops 201 bodies)."""
+    headers = {
+        "Authorization": f"Bearer {HEROKU_API_KEY}",
+        "Accept": "application/vnd.heroku+json; version=3",
+        "Content-Type": "application/json",
+    }
+    response = requests.post(
+        f"{HEROKU_API_URL}/apps/{app_name}/builds",
+        headers=headers,
+        json={"source_blob": {"url": source_url}},
+        timeout=60,
+    )
+    try:
+        return response.status_code, response.json()
+    except ValueError:
+        return response.status_code, response.text
+
+
+BUILD_POLL_SECONDS = 10  # how often the live log message is refreshed
+BUILD_TIMEOUT_SECONDS = 30 * 60
+
+
+async def _stream_build_output(url, lines):
+    """Read Heroku's live build output into `lines` until the stream closes."""
+    try:
+        timeout = aiohttp.ClientTimeout(total=None, sock_read=120)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(url) as resp:
+                async for raw in resp.content:
+                    lines.append(raw.decode(errors="replace").rstrip("\r\n"))
+    except Exception:
+        pass  # the status poll below still tells us how the build ended
+
+
+async def _build_result_lines(app_name, build_id):
+    """Fallback: fetch the finished build's log from the result endpoint."""
+    status, data = await asyncio.to_thread(
+        make_heroku_request,
+        f"apps/{app_name}/builds/{build_id}/result",
+        HEROKU_API_KEY,
+    )
+    if status == 200 and isinstance(data, dict):
+        return [item.get("line", "").rstrip("\r\n") for item in data.get("lines", [])]
+    return []
+
+
+def _progress_text(app_name, title, link, lines):
+    tail = "\n".join(lines[-12:]).replace("`", "'")[-1500:]
+    text = f"{title}\n\nApp: {app_name}"
+    if link:
+        text += f"\nFull logs: {link}"
+    if tail:
+        text += f"\n\n```\n{tail}\n```"
+    return text
+
+
+async def watch_build(message, app_name, build, reply_markup):
+    """Show live build logs (refreshed every 10s) until the build finishes."""
+    build_id = build["id"]
+    lines = []
+    reader = None
+    if build.get("output_stream_url"):
+        reader = asyncio.create_task(
+            _stream_build_output(build["output_stream_url"], lines)
+        )
+
+    progress = await message.reply_text(
+        convert_to_small_caps(
+            f"⌛ Deploying. Live logs refresh every {BUILD_POLL_SECONDS} seconds..."
+        )
+    )
+    started = time.monotonic()
+    state = "pending"
+    last_len, link = -1, None
+
+    try:
+        while True:
+            await asyncio.sleep(BUILD_POLL_SECONDS)
+
+            code, info = await asyncio.to_thread(
+                make_heroku_request,
+                f"apps/{app_name}/builds/{build_id}",
+                HEROKU_API_KEY,
+            )
+            if code == 200 and isinstance(info, dict):
+                state = info.get("status", state)
+            finished = state != "pending"
+            if not finished and time.monotonic() - started > BUILD_TIMEOUT_SECONDS:
+                state, finished = "timeout", True
+
+            if finished and not lines:
+                lines.extend(await _build_result_lines(app_name, build_id))
+
+            if len(lines) != last_len:  # upload only when there is new output
+                last_len = len(lines)
+                link = await batbin("\n".join(lines)) or link
+
+            if finished:
+                break
+            try:
+                await progress.edit_text(
+                    _progress_text(app_name, "⌛ Deploying... (live logs)", link, lines),
+                    disable_web_page_preview=True,
+                )
+            except Exception:
+                pass  # e.g. message not modified / flood wait
+    finally:
+        if reader:
+            reader.cancel()
+
+    try:
+        await progress.delete()
+    except Exception:
+        pass
+
+    if state == "succeeded":
+        await message.reply_text(
+            convert_to_small_caps("✅ Deployed Successfully...✨\n\n🥀 Please turn on dynos 👇")
+            + (f"\n\nBuild logs: {link}" if link else ""),
+            reply_markup=reply_markup,
+            disable_web_page_preview=True,
+        )
+    else:
+        reason = "timed out" if state == "timeout" else f"status: {state}"
+        await message.reply_text(
+            _progress_text(app_name, f"❌ Build did not succeed ({reason})", link, lines),
+            disable_web_page_preview=True,
+        )
+
+
 async def collect_app_info(message):
     global app_name
     global BRANCH_NAME
@@ -357,11 +534,8 @@ async def collect_app_info(message):
             payload=user_inputs,
         )
 
-        status, result = make_heroku_request(
-            f"apps/{app_name}/builds",
-            HEROKU_API_KEY,
-            method="post",
-            payload={"source_blob": {"url": f"{REPO_URL}/tarball/{BRANCH_NAME}"}},
+        status, result = await asyncio.to_thread(
+            create_build, app_name, f"{REPO_URL}/tarball/{BRANCH_NAME}"
         )
 
         buttons = [
@@ -374,22 +548,11 @@ async def collect_app_info(message):
         ]
         reply_markup = InlineKeyboardMarkup(buttons)
 
-        if status == 201:
-            ok = await message.reply_text(
-                convert_to_small_caps("⌛ Deploying. Please wait a moment...")
-            )
-
-            await asyncio.sleep(200)
-            await ok.delete()
-            await message.reply_text(
-                convert_to_small_caps(
-                    "✅ Deployed Successfully...✨\n\n🥀 Please turn on dynos 👇"
-                ),
-                reply_markup=reply_markup,
-            )
+        if status == 201 and isinstance(result, dict) and result.get("id"):
+            await watch_build(message, app_name, result, reply_markup)
         else:
             await message.reply_text(
-                convert_to_small_caps(f"Error triggering build: {result}")
+                convert_to_small_caps(f"Error triggering build: {status} {result}")
             )
 
     else:
