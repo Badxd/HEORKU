@@ -459,7 +459,6 @@ async def watch_build(message, app_name, build, reply_markup):
         reason = "timed out" if state == "timeout" else f"status: {state}"
         await message.reply_text(
             _progress_text(app_name, f"❌ Build did not succeed ({reason})", link, lines),
-            disable_web_page_preview=True,
         )
 
 
