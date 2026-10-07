@@ -15,10 +15,10 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 HEROKU_API_URL = "https://api.heroku.com"
 HEROKU_API_KEY = os.getenv("HEROKU_API_KEY")  # Pre-defined variable
-REPO_URL = "https://github.com/IamDvis/DV-MUSIC"
+REPO_URL = "https://github.com/Badmunda05/ShizuMusic"
 BRANCH_NAME = None
 BUILDPACK_URL = "https://github.com/heroku/heroku-buildpack-python"
-UPSTREAM_REPO = "https://github.com/IamDvis/DV-MUSIC"  # Pre-defined variable
+UPSTREAM_REPO = "https://github.com/Badmunda05/ShizuMusic"  # Pre-defined variable
 UPSTREAM_BRANCH = "master"  # Pre-defined variable
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
@@ -186,7 +186,7 @@ async def collect_env_variables(message, env_vars):
             if response.text == "/skip":
                 continue
             if response.text == "/cancel":
-                REPO_URL = "https://github.com/IamDvis/DV-MUSIC"
+                REPO_URL = "https://github.com/Badmunda05/ShizuMusic"
                 await message.reply_text("**Deployment canceled.**")
                 return None
             user_inputs[var_name] = response.text
@@ -315,7 +315,7 @@ async def ask_for_branch(callback_query, branches, default_branch):
 @app.on_message(filters.command("host") & filters.private & filters.sudo)
 async def host_app(client, message):
     global app_name  # Declare global to use it everywhere
-    REPO_URL = "https://github.com/IamDvis/DV-MUSIC"
+    REPO_URL = "https://github.com/Badmunda05/ShizuMusic"
     await ask_repo_choice(message)
 
 
@@ -325,7 +325,7 @@ async def handle_repo_choice(client, callback_query):
     choice = callback_query.data.split("_")[1]
 
     if choice == "upstream":
-        REPO_URL = "https://github.com/IamDvis/DV-MUSIC"
+        REPO_URL = "https://github.com/Badmunda05/ShizuMusic"
         branches = await fetch_repo_branches(REPO_URL)
         default_branch = "master"
         await ask_for_branch(callback_query, branches, default_branch)
@@ -344,7 +344,7 @@ async def handle_repo_choice(client, callback_query):
                 await response.reply_text(
                     convert_to_small_caps("**Deployment canceled.**")
                 )
-                REPO_URL = "https://github.com/IamDvis/DV-MUSIC"
+                REPO_URL = "https://github.com/Badmunda05/ShizuMusic"
                 return None
 
             REPO_URL = response.text
@@ -367,7 +367,7 @@ async def handle_repo_choice(client, callback_query):
                 await response.reply_text(
                     convert_to_small_caps("**Deployment canceled.**")
                 )
-                REPO_URL = "https://github.com/IamDvis/DV-MUSIC"
+                REPO_URL = "https://github.com/Badmunda05/ShizuMusic"
                 return None
 
             await callback_query.message.reply_text(
@@ -378,7 +378,7 @@ async def handle_repo_choice(client, callback_query):
             return await handle_repo_choice(client, callback_query)
 
         except ListenerTimeout:
-            REPO_URL = "https://github.com/IamDvis/DV-MUSIC"
+            REPO_URL = "https://github.com/Badmunda05/ShizuMusic"
             await callback_query.message.edit_text(
                 convert_to_small_caps(
                     "Timeout! You must provide the external repo URL within 5 minutes."
@@ -412,7 +412,7 @@ async def collect_app_info(message):
                 await message.reply_text(
                     convert_to_small_caps("**Deployment canceled.**")
                 )
-                REPO_URL = "https://github.com/IamDvis/DV-MUSIC"
+                REPO_URL = "https://github.com/Badmunda05/ShizuMusic"
                 return None
         except ListenerTimeout:
             await message.reply_text(
