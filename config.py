@@ -4,18 +4,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-API_ID = int(
-    getenv(
-        "API_ID",
-    )
-)
-
+API_ID = int(getenv("API_ID"))
 API_HASH = getenv("API_HASH", "")
-
-BOT_TOKEN = getenv("BOT_TOKEN", None)
-
+BOT_TOKEN = getenv("BOT_TOKEN")
 HEROKU_API_KEY = getenv("HEROKU_API_KEY", "")
 
-OWNER_ID = list(
-    map(int, getenv("OWNER_ID", "8789271943").split())
-)
+# Space-separated Telegram user IDs allowed to control the bot (no default on purpose)
+OWNER_ID = list(map(int, getenv("OWNER_ID", "").split()))

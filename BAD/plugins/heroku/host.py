@@ -1,6 +1,5 @@
 import asyncio
 import os
-import socket
 
 import aiohttp
 import requests
@@ -53,14 +52,6 @@ def convert_to_small_caps(text):
     return re.sub(pattern, replace, text)
 
 
-async def is_heroku():
-    return "heroku" in socket.getfqdn()
-
-
-async def paste_neko(code: str):
-    return await BADbin(code)
-
-
 def fetch_app_json(repo_url, branch_name):
     app_json_url = f"{repo_url}/raw/{branch_name}/app.json"  # Use the provided branch
     response = requests.get(app_json_url)
@@ -75,83 +66,14 @@ def make_heroku_request(endpoint, api_key, method="get", payload=None):
     }
     url = f"{HEROKU_API_URL}/{endpoint}"
     response = getattr(requests, method)(url, headers=headers, json=payload)
-
-    # Return parsed JSON for `get` method as well
-    if method == "get":
-        return response.status_code, response.json()
-    else:
-        return response.status_code, (
-            response.json() if response.status_code == 200 else response.text
-        )
-
-
-def make_heroku_request(endpoint, api_key, method="get", payload=None):
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Accept": "application/vnd.heroku+json; version=3",
-        "Content-Type": "application/json",
-    }
-    url = f"{HEROKU_API_URL}/{endpoint}"
-    response = getattr(requests, method)(url, headers=headers, json=payload)
-    return response.status_code, (
-        response.json() if response.status_code == 200 else None
-    )
-
-
-def make_heroku_requesta(endpoint, api_key, method="get", payload=None):
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Accept": "application/vnd.heroku+json; version=3",
-        "Content-Type": "application/json",
-    }
-    url = f"{HEROKU_API_URL}/{endpoint}"
-    response = getattr(requests, method)(url, headers=headers, json=payload)
-
-    # Return parsed JSON for `get` method as well
-    if method == "get":
-        return response.status_code, response.json()
-    else:
-        return response.status_code, (
-            response.json() if response.status_code == 200 else response.text
-        )
-
-
-def make_heroku_requestb(endpoint, api_key, method="get", payload=None):
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Accept": "application/vnd.heroku+json; version=3",
-        "Content-Type": "application/json",
-    }
-    url = f"{HEROKU_API_URL}/{endpoint}"
-    response = getattr(requests, method)(url, headers=headers, json=payload)
-    return response.status_code, response.json() if method != "get" else response
-
-
-def make_heroku_requestc(endpoint, api_key, method="get", payload=None):
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Accept": "application/vnd.heroku+json; version=3",
-        "Content-Type": "application/json",
-    }
-    url = f"{HEROKU_API_URL}/{endpoint}"
-    response = getattr(requests, method)(url, headers=headers, json=payload)
     return response.status_code, (
         response.json() if response.status_code == 200 else None
     )
 
 
 async def fetch_apps():
-    status, apps = make_heroku_requestc("apps", HEROKU_API_KEY)
+    status, apps = make_heroku_request("apps", HEROKU_API_KEY)
     return apps if status == 200 else None
-
-
-async def get_owner_id(app_name):
-    status, config_vars = make_heroku_request(
-        f"apps/{app_name}/config-vars", HEROKU_API_KEY
-    )
-    if status == 200 and config_vars:
-        return config_vars.get("OWNER_ID")
-    return None
 
 
 async def collect_env_variables(message, env_vars):
@@ -206,16 +128,6 @@ async def collect_env_variables(message, env_vars):
 
     return user_inputs
 
-    if status == 200:
-        await callback_query.message.edit_text(
-            f"Dynos for app `{app_name}` turned on successfully.",
-            reply_markup=reply_markup,
-        )
-    else:
-        await callback_query.message.edit_text(
-            f"Failed to turn on dynos: {result}", reply_markup=reply_markup
-        )
-
 
 async def check_app_name_availability(app_name):
     # Try to create a temporary app with the provided name
@@ -251,24 +163,6 @@ async def fetch_repo_branches(REPO_URL):
                 return []  # Return empty if fetch fails
 
 
-async def get_heroku_config(app_name):
-    url = f"https://api.heroku.com/apps/{app_name}/config-vars"
-    headers = {
-        "Authorization": f"Bearer {HEROKU_API_KEY}",
-        "Accept": "application/vnd.heroku+json; version=3",
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            if response.status == 200:
-                config_vars = await response.json()
-                return config_vars.get(
-                    "UPSTREAM_REPO"
-                )  # Return the UPSTREAM_REPO value
-            else:
-                return None  # Handle errors as needed
-
-
 # Add this new function to display buttons for upstream or external repo
 async def ask_repo_choice(message):
     buttons = [
@@ -284,7 +178,7 @@ async def ask_repo_choice(message):
         ],
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
-    ask = await message.reply_text(
+    await message.reply_text(
         convert_to_small_caps(
             "From which repo do you want to deploy from the **ERA VIBES REPO** or an **Any External Other Repo**?"
         ),
@@ -314,8 +208,6 @@ async def ask_for_branch(callback_query, branches, default_branch):
 # This handles the /host command and displays the repo choice buttons
 @app.on_message(filters.command("host") & filters.private & filters.sudo)
 async def host_app(client, message):
-    global app_name  # Declare global to use it everywhere
-    REPO_URL = "https://github.com/Badmunda05/ShizuMusic"
     await ask_repo_choice(message)
 
 

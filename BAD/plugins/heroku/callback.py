@@ -8,6 +8,7 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyromod.exceptions import ListenerTimeout
 
 from BAD import app
+from BAD.plugins.heroku.host import get_deployed_apps
 from config import OWNER_ID as SUDOERS
 
 # Import your MongoDB database structure
@@ -75,69 +76,6 @@ def convert_to_small_caps(text):
     return re.sub(pattern, replace, text)
 
 
-async def is_heroku():
-    return "heroku" in socket.getfqdn()
-
-
-async def paste_neko(code: str):
-    return await BADbin(code)
-
-
-def fetch_app_json(repo_url):
-    app_json_url = f"{repo_url}/raw/master/app.json"
-    response = requests.get(app_json_url)
-    return response.json() if response.status_code == 200 else None
-
-
-def make_heroku_request(endpoint, api_key, method="get", payload=None):
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Accept": "application/vnd.heroku+json; version=3",
-        "Content-Type": "application/json",
-    }
-    url = f"{HEROKU_API_URL}/{endpoint}"
-    response = getattr(requests, method)(url, headers=headers, json=payload)
-
-    # Return parsed JSON for `get` method as well
-    if method == "get":
-        return response.status_code, response.json()
-    else:
-        return response.status_code, (
-            response.json() if response.status_code == 200 else response.text
-        )
-
-
-def make_heroku_request(endpoint, api_key, method="get", payload=None):
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Accept": "application/vnd.heroku+json; version=3",
-        "Content-Type": "application/json",
-    }
-    url = f"{HEROKU_API_URL}/{endpoint}"
-    response = getattr(requests, method)(url, headers=headers, json=payload)
-    return response.status_code, (
-        response.json() if response.status_code == 200 else None
-    )
-
-
-def make_heroku_requesta(endpoint, api_key, method="get", payload=None):
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Accept": "application/vnd.heroku+json; version=3",
-        "Content-Type": "application/json",
-    }
-    url = f"{HEROKU_API_URL}/{endpoint}"
-    response = getattr(requests, method)(url, headers=headers, json=payload)
-
-    # Return parsed JSON for `get` method as well
-    if method == "get":
-        return response.status_code, response.json()
-    else:
-        return response.status_code, (
-            response.json() if response.status_code == 200 else response.text
-        )
-
-
 def make_heroku_requestb(endpoint, api_key, method="get", payload=None):
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -149,7 +87,7 @@ def make_heroku_requestb(endpoint, api_key, method="get", payload=None):
     return response.status_code, response.json() if method != "get" else response
 
 
-def make_heroku_requestc(endpoint, api_key, method="get", payload=None):
+def make_heroku_request(endpoint, api_key, method="get", payload=None):
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Accept": "application/vnd.heroku+json; version=3",
@@ -163,22 +101,8 @@ def make_heroku_requestc(endpoint, api_key, method="get", payload=None):
 
 
 async def fetch_apps():
-    status, apps = make_heroku_requestc("apps", HEROKU_API_KEY)
+    status, apps = make_heroku_request("apps", HEROKU_API_KEY)
     return apps if status == 200 else None
-
-
-async def get_owner_id(app_name):
-    status, config_vars = make_heroku_request(
-        f"apps/{app_name}/config-vars", HEROKU_API_KEY
-    )
-    if status == 200 and config_vars:
-        return config_vars.get("OWNER_ID")
-    return None
-
-
-import aiohttp
-from pyrogram import filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 # Get Heroku config var (UPSTREAM_REPO)
@@ -929,7 +853,6 @@ async def edit_vars(client, callback_query):
         f"apps/{app_name}/config-vars", HEROKU_API_KEY
     )
 
-    print(f"Status: {status}, Response: {response}")
 
     if status == 200 and isinstance(response, dict):
         if response:
