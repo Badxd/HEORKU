@@ -5,3 +5,4 @@ requests
 tgcrypto
 urllib3
 kurigram
+richgram
