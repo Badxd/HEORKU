@@ -435,7 +435,6 @@ async def watch_build(message, app_name, build, reply_markup):
             try:
                 await progress.edit_text(
                     _progress_text(app_name, "⌛ Deploying... (live logs)", link, lines),
-                    disable_web_page_preview=True,
                 )
             except Exception:
                 pass  # e.g. message not modified / flood wait
@@ -453,7 +452,6 @@ async def watch_build(message, app_name, build, reply_markup):
             convert_to_small_caps("✅ Deployed Successfully...✨\n\n🥀 Please turn on dynos 👇")
             + (f"\n\nBuild logs: {link}" if link else ""),
             reply_markup=reply_markup,
-            disable_web_page_preview=True,
         )
     else:
         reason = "timed out" if state == "timeout" else f"status: {state}"

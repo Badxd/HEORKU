@@ -270,7 +270,6 @@ async def push_code(client, callback_query):
         if ok:
             await status.edit_text(
                 sc("Code pushed successfully!") + f"\n\n{clean_url}",
-                disable_web_page_preview=True,
             )
         else:
             await status.edit_text(f"Push failed.\n\n`{output[-800:]}`")

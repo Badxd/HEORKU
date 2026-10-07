@@ -27,6 +27,10 @@
       "description": "Telegram user ID(s) allowed to control the bot. Separate multiple IDs with a space.",
       "required": true
     },
+    "LOGGER_ID": {
+      "description": "Optional. Chat ID (user/group/channel) where the bot sends a message when it starts. Example: -1001234567890",
+      "required": false
+    },
     "HEROKU_API_KEY": {
       "description": "Your Heroku account's API key",
       "required": true
