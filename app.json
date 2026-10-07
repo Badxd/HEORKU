@@ -1,0 +1,57 @@
+{
+    "name": "DVIS-HEROKU-BOT",
+    "description": "THIS IS HEROKU CONTROLER BOT. IT CONTROLS YOUR ALL HEROKU FUNCTION WITH THE HELP OF HEROKU API KEY. MAKE SURE YOU WILL FILL HEROKU API KEY VALUE CORRECTLY. YOU CAN USE ANY HEROKU API KEY THAT HEROKU ACCOUNT YOU WANT TO ACCESS AND HANDLE.",
+    "logo": "https://envs.sh/WkW.jpg",
+    "keywords": [
+    "python3",
+    "telegram",
+    "bot",
+    "DVIS",
+    "DVISHEROKUBot",
+    "telegram-bot",
+    "pyrogram"
+    ],
+    
+    "stack": "container",
+    "env": {
+      "API_ID": {
+        "description": "Get this value from https://my.telegram.org",
+        "value": "14050586",
+        "required": true
+      },
+      "API_HASH": {
+        "description": "Get this value from https://my.telegram.org",
+        "value": "42a60d9c657b106370c79bb0a8ac560c",
+        "required": true
+      },
+      "BOT_TOKEN": {
+        "description": "A Bot's token Get it from @Botfather",
+        "value": "",
+        "required": true
+      },
+      "OWNER_ID": {
+        "description": "The user id(s) of user(s) whom you would like to add as a OWNER. Multiple values shall be seperated with a space.",
+        "value": "",
+        "required": true
+      },
+      "HEROKU_API_KEY": {
+        "description": "Your Heroku account's API key",
+        "value": "",
+        "required": false
+      }
+    },
+    "buildpacks": [
+          {
+              "url": "heroku/python"
+          },
+          {
+              "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git"
+          }
+      ],
+      "formation": {
+          "worker": {
+              "quantity": 1,
+              "size": "basic"
+          }
+      }
+  }
