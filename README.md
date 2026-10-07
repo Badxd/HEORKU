@@ -1,11 +1,5 @@
 ━━━━━━━━━━━━━━━━━━━━━━━
 <p align="left">
-
-<p align="center">
-    <b>ᴠɪsɪᴛᴏʀs</b><br>
-    <img align="middle" src="https://profile-counter.glitch.me/IamDvis/count.svg" />
-</p>
-
 <h2 align="center">
     ─「 𝗛𝗘𝗥𝗢𝗞𝗨 𝗕𝗢𝗧 」─
 
@@ -14,7 +8,7 @@
 <img src="https://readme-typing-svg.herokuapp.com?color=FF0000&width=420&lines=♦𝙳𝙴𝙿𝙻𝙾𝚈+𝙾𝙽+𝙷𝙴𝚁𝙾𝙺𝚄♦;♨️+𝙽𝙾+𝙷𝙴𝚁𝙾𝙺𝚄+𝙱𝙰𝙽+𝙸𝚂𝚂𝚄𝙴+𝙰𝙻𝚂𝙾+𝚅𝙿𝚂+𝙳𝙴𝙿𝙻𝙾𝚈+📍+𝙿𝚁𝙴𝚂𝙴𝙽𝚃;🎭+𝙿𝙾𝚆𝙴𝚁𝙳+𝙱𝚈+𝐁𝐀𝐃🎭">
 
 <p align="center">
-    <img src="https://envs.sh/0vq.jpg">
+    <img src="https://d.uguu.se/PGvzMxYJ.jpg">
 </p>
 
 
